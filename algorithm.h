@@ -1,8 +1,20 @@
-//
-// Created by Marek on 17/04/2021.
-//
+#pragma once
 
-#ifndef SEQUENCING_ALGORITHM_H
-#define SEQUENCING_ALGORITHM_H
+#include <string>
+#include <vector>
 
-#endif //SEQUENCING_ALGORITHM_H
+#define FOR(i, n) for(int i=0;i<n;++i)
+
+using namespace std;
+
+string run(vector<string> words) {
+
+    string result = "";
+
+    for (string word : words) {
+        printf("%s\n", word.c_str());
+        result += word;
+    }
+
+    return result;
+}
