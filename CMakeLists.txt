@@ -3,4 +3,4 @@ project(sequencing)
 
 set(CMAKE_CXX_STANDARD 14)
 
-add_executable(sequencing main.cpp algorithm.h)
+add_executable(sequencing main.cpp)
