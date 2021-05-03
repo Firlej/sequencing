@@ -1,3 +1,0 @@
-C:/Users/Marek/Desktop/sequencing/cmake-build-debug/CMakeFiles/sequencing.dir
-C:/Users/Marek/Desktop/sequencing/cmake-build-debug/CMakeFiles/edit_cache.dir
-C:/Users/Marek/Desktop/sequencing/cmake-build-debug/CMakeFiles/rebuild_cache.dir

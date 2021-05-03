@@ -2,14 +2,12 @@
 #include <iomanip>
 #include <string>
 #include <vector>
-#include <vector>
 #include <string>
 #include <fstream>
 #include <sstream>
 #include <algorithm>
 
-#define FOR(i, n) for(int i=0;i<n;++i)
-#define MAX_WORDS 10000
+#include "population.hpp"
 
 using namespace std;
 
@@ -19,28 +17,16 @@ struct file {
 };
 
 int S; // number of words
-int l; // lenth of each word
+int l; // length of each word
 int n; // length of the resulting sequence
 
 int d[MAX_WORDS][MAX_WORDS]; // distances between each of the nodes (words)
-// data structure could be changed due to the fact that most distances are equal to max length
 
-bool used[MAX_WORDS] = {false};
+vector<string> words;
 
-vector<string> words, words_used;
+void run(file f) {
 
-// check if the suffix of string a is a prefix of string b
-int dist(string a, string b) {
-    for (int i = l; i >= 1; i--) {
-        if (a.substr(l - i, i) == b.substr(0, i)) {
-            return l - i;
-        }
-    }
-    return l;
-    // results could instead be the length of the resulting string created by merging the two words
-}
-
-void init(file f) {
+    // INIT
 
     fstream fs;
     string s;
@@ -48,7 +34,6 @@ void init(file f) {
     fs.open(f.filename.c_str());
 
     words.clear();
-    words_used.clear();
 
     while (fs >> s) {
         words.push_back(s);
@@ -58,71 +43,56 @@ void init(file f) {
     l = f.l;
     n = f.n;
 
-    FOR (i, S) {
-        FOR (j, S) {
-            d[i][j] = dist(words[i], words[j]);
-//            cout << words[i] << " " << words[j] << " " << d[i][j] << endl;
-        }
-    }
+    calc_distances();
 
-    for (int i = 0; i < S; ++i) {
-        used[i] = false;
-        cout << used[i] << " ";
-    }
-    cout << endl;
+    // RUN
 
-    cout << "Words: " << words.size() << " | Word size: " << l << endl;
-}
+    Population population;
 
-string append_word(string temp_result, int i) {
-    if (temp_result == "")
-        return words[i];
+    Individual best_individual = population.get_best_individual();
 
-    used[i] = true;
-    int temp_d = dist(temp_result.substr(temp_result.size() - l, l), words[i]);
+//    printf("RESULT: %s\n", best_individual.s.c_str());
 
+//    best_individual.print_used_words();
+//    best_individual.print_negative_errors();
 
-    return temp_result + words[i].substr(l - temp_d, temp_d);
-}
+    cout << "File: " << f.filename
+        << " | S: " << S
+        << " | l: " << l
+        << " | n: " << n
+        << " | LENGTH: " << best_individual.s.size()
+        << " | SCORE: " << best_individual.score()
+        << " | N_ERRORS: " << best_individual.get_negative_errors().size() << endl;
 
-string run(vector<string> words) {
+//    vector<string> negative_errors = best_individual.get_negative_errors();
 
+//    words.insert(words.end(), negative_errors.begin(), negative_errors.end());
+//    S = words.size();
+//    calc_distances();
 
-    string result = "";
+//    Population population_new;
+//
+//    population_new.print_individuals();
+//
+//    Individual best_individual_new = population_new.get_best_individual();
+//
+//    cout << "File: " << f.filename
+//         << " | S: " << S
+//         << " | l: " << l
+//         << " | n: " << n
+//         << " | LENGTH: " << best_individual_new.s.size()
+//         << " | SCORE: " << best_individual_new.score()
+//         << " | N_ERRORS: " << best_individual_new.get_negative_errors().size() << endl;
 
-//    for (string word : words) {
-//        printf("%s\n", word.c_str());
-//        result += word;
-//    }
+//    population.print_individuals();
 
-    result = append_word(result, 0);
-    words_used.push_back(words[0]);
-    int S_used = 1;
+//    Individual individual;
+//    printf("LENGTH: %d | SCORE: %d | N_ERRORS: %d\n",
+//           individual.s.size(),
+//           individual.score(),
+//           individual.get_negative_errors().size()
+//    );
 
-    while (S_used < S) {
-        int best_i = -1;
-        int best_d = l + 1;
-        FOR (i, S) {
-            if (!used[i]) {
-                if (result.find(words[i]) != string::npos) {
-                    S_used++;
-                    used[i] = true;
-                } else {
-                    int temp_d = dist(result, words[i]);
-                    if (temp_d < best_d) {
-                        best_d = temp_d;
-                        best_i = i;
-                    }
-                }
-            }
-        }
-        result = append_word(result, best_i);
-//        cout << result << endl;
-        words_used.push_back(words[best_i]);
-        S_used++;
-    }
-
-    return result;
 }
 
 
@@ -130,28 +100,40 @@ int main() {
 
     vector<file> files = {
 //            {"../files/test.txt", 11, 6, 0, 0},
+//
             {"../files/9.200-40", 209, 10, 0, 40},
-//            Words: 160 | Word size: 10 | n: 209 | resulting size: 1426
-//            Words: 160 | Word size: 10 | n: 209 | resulting size: 1037
+//            {"../files/9.200-80", 209, 10, 0, 80},
+//            {"../files/18.200-40", 209, 10, 0, 40},
+//            {"../files/18.200-80", 209, 10, 0, 80},
+//            {"../files/35.200-40", 209, 10, 0, 40},
+//            {"../files/35.200-80", 209, 10, 0, 80},
+//
+//            {"../files/20.300-60", 309, 10, 0, 60},
+//            {"../files/20.300-120", 309, 10, 0, 120},
+//            {"../files/55.300-60", 309, 10, 0, 60},
+//            {"../files/55.300-120", 309, 10, 0, 120},
+//            {"../files/58.300-60", 309, 10, 0, 60},
+//            {"../files/58.300-120", 309, 10, 0, 120},
+//
+//            {"../files/55.400-80", 409, 10, 0, 80},
+//            {"../files/55.400-160", 409, 10, 0, 160},
+//            {"../files/62.400-80", 409, 10, 0, 80},
+//            {"../files/62.400-160", 409, 10, 0, 160},
+//            {"../files/68.400-80", 409, 10, 0, 80},
+//            {"../files/68.400-160", 409, 10, 0, 160},
+//
+//            {"../files/10.500-100", 509, 10, 0, 100},
+//            {"../files/10.500-200", 509, 10, 0, 200},
+//            {"../files/25.500-100", 509, 10, 0, 100},
+//            {"../files/25.500-200", 509, 10, 0, 200},
+//            {"../files/53.500-100", 509, 10, 0, 100},
+//            {"../files/53.500-200", 509, 10, 0, 200},
+
+//            {"../files/9.200-40.sample", 15, 10, 0, 0},
     };
 
     for (auto file : files) {
-
-        printf("FILE: %s\n", file.filename.c_str());
-
-        cout << "Words: " << words.size() << " | Word size: " << l << endl;
-
-        init(file);
-
-        string result = run(words);
-
-        printf("RESULT: %s\n", result.c_str());
-
-        FOR (i, words_used.size()) {
-            printf("%d: %s\n", i, words_used[i].c_str());
-        }
-
-        cout << "Words: " << S << " | Word size: " << l << " | n: " << n << " | resulting size: " << result.size() << endl;
+        run(file);
     }
     return 0;
 }
