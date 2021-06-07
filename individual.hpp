@@ -63,12 +63,61 @@ public:
     };
 
     // individual from individuals from prev_pop
-    Individual(vector<Individual> individuals) {
-        //
+    Individual(vector<Individual> individuals, float fitness_sum) {
+        float r = random(0.0, fitness_sum);
+
+        for (int i = individuals.size() - 1; i >= 0; i--) {
+            fitness_sum -= individuals[i].fitness();
+            if (r > fitness_sum) {
+                set(individuals[i]);
+                break;
+            }
+        }
+        mutate();
     };
 
     void mutate() {
-        return;
+        float r = random(0.0, 1.0);
+
+        // swap segments
+        auto segments = get_segments(1);
+        while (random(0.0, 1.0) < 0.3) {
+            int i1 = rand() % segments.size();
+            int i2 = rand() % segments.size();
+            swap(segments[i1], segments[i2]);
+        }
+
+        set_word_ids(segments);
+
+        // swap words
+        while (random(0.0, 1.0) < 0.1) {
+            int i1 = rand() % words_ids_used.size();
+            int i2 = rand() % words_ids_used.size();
+            swap(words_ids_used[i1], words_ids_used[i2]);
+            float r_swap = random(0.0, 1.0);
+        }
+
+        // shuffle segments
+        if (random(0.0, 1.0) < 0.05) {
+            auto segments = get_segments(1);
+            random_shuffle(segments.begin(), segments.end());
+            set_word_ids(segments);
+        }
+
+        // completely new individual
+        if (random(0.0, 1.0) < 0.01) {
+            set(Individual(words, rand() % words->words.size()));
+        }
+
+        set_string();
+    }
+
+    void set(Individual i) {
+        // set selected individuals' properties to this one
+        words = i.words;
+        words_ids_used = i.words_ids_used;
+        set_string();
+        copy(begin(i.used), end(i.used), begin(used));
     }
 
     // generate a result string from words
@@ -92,7 +141,10 @@ public:
     // fitness score. lower the better
     int score() {
         return s.size();
-//        return s.size() - words->n;
+    }
+
+    float fitness() {
+        return (float) 100000 / score();
     }
 
     static Individual new_individual() {
@@ -133,7 +185,7 @@ public:
 
 // GETTERS
 
-vector<vector<int>> Individual::get_segments(int max_dist = 2) {
+vector<vector<int>> Individual::get_segments(int max_dist = 1) {
     vector<vector<int>> segments;
     int i = 0;
     while (i < words_ids_used.size()) {

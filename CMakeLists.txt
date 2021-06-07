@@ -3,4 +3,4 @@ project(sequencing)
 
 set(CMAKE_CXX_STANDARD 14)
 
-add_executable(sequencing main.cpp utils.hpp individual.hpp population.hpp ga.hpp)
+add_executable(sequencing main.cpp words.hpp utils.hpp individual.hpp population.hpp ga.hpp)

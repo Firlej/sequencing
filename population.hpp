@@ -12,6 +12,8 @@ public:
 
     Words *words;
 
+    float fitness_sum;
+
     Population() {};
 
     Population(Words *_words) {
@@ -22,13 +24,31 @@ public:
         }
 
         size = individuals.size();
+        set_fitness_sum();
     };
 
     // new population based on previous generation
-//    Population(vector<Individual> _individuals, int _size) {
-//        size = _size;
-//        individuals = _individuals;
-//    };
+    Population(Population& population) {
+//        cout << "elo" << endl;
+        words = population.words;
+
+        individuals.clear();
+
+        FOR (i, population.individuals.size()) {
+            Individual individual = Individual(population.individuals, fitness_sum);
+            individuals.push_back(individual);
+        }
+        size = individuals.size();
+        set_fitness_sum();
+    };
+
+    void set_fitness_sum() {
+        fitness_sum = 0;
+        for (Individual i: individuals) {
+            fitness_sum += i.fitness();
+        }
+//        cout << fitness_sum << endl;
+    }
 
     Individual get_best_individual() {
         Individual best_individual = individuals[0];

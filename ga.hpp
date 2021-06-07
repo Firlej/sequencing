@@ -18,6 +18,7 @@ public:
         population = Population(_words);
     };
 
-
-
+    void next_population() {
+        population = Population(population);
+    }
 };

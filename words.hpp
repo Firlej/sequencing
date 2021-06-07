@@ -17,6 +17,8 @@ public:
 
     int S; // number of words in original sequence
 
+    vector<vector<vector<int>>> closest_words;
+
     Words() {}
 
     Words(string _filename, int _n, int _l, int _cnt_positive, int _cnt_negative) {

@@ -44,3 +44,7 @@ void print_segments(vector<string> words, vector<vector<int>> segments, int l) {
         cout << get_string(words, segment, l) << endl;
     }
 }
+
+float random(float LO = 0.0, float HI = 1.0) {
+    return LO + static_cast <float> (rand()) /( static_cast <float> (RAND_MAX/(HI-LO)));
+}
