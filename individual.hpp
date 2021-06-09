@@ -51,12 +51,15 @@ public:
                 }
             }
 
-            // if more than one best_id check wchich one has better next word. very useful for positive error instances
+            // if more than one best_id check which one has better next word. very useful for positive error instances
+//            int depth = 1;
             if (best_ids.size() > 1) {
                 best_id = -1;
-                best_d = words->l + 1;
+                best_d = words->l * words->S + 1;
                 for (int i = 0; i < best_ids.size(); i++) {
-                    if (next_best_id(i) != -1) {
+//                    int temp_id = best_ids[i];
+
+                    if (next_best_id(best_ids[i]) != -1) {
                         int temp_d = words->d[best_ids[i]][next_best_id(best_ids[i])];
                         if (temp_d < best_d) {
                             best_d = temp_d;
@@ -64,6 +67,13 @@ public:
                         }
                     }
                 }
+//                for (int i = 0; i < best_ids.size(); i++) {
+//                    int temp_d = words->d[best_ids[i]][next_best_id(best_ids[i])];
+//                    if (temp_d != best_d) {
+//                        best_ids.erase(best_ids.begin() + i);
+//                        i--;
+//                    }
+//                }
             }
             words_ids_used.push_back(best_id);
 //            cout << words->words[best_i] << " ";
@@ -84,7 +94,7 @@ public:
         return words->words[last_id()];
     }
 
-    int next_best_id(int id) {
+    int next_best_id(int id, vector<int> not_in_ids = {}) {
         int best_i = -1;
         int best_d = words->l + 1;
         FOR (i, words->words.size()) {
@@ -101,49 +111,117 @@ public:
 
     // individual from individuals from prev_pop
     Individual(vector<Individual> individuals, float fitness_sum) {
-        float r = random(0.0, fitness_sum);
 
-        for (int i = individuals.size() - 1; i >= 0; i--) {
-            fitness_sum -= individuals[i].fitness();
-            if (r > fitness_sum) {
-                set(individuals[i]);
-                break;
+        float r = random(0.0, 1);
+
+        if (r < 0.1) {
+            // select one parent and mutate
+            float p = random(0.0, fitness_sum);
+            for (int i = individuals.size() - 1; i >= 0; i--) {
+                fitness_sum -= individuals[i].fitness();
+                if (p > fitness_sum) {
+                    set(individuals[i]);
+                    break;
+                }
             }
+            mutate();
+        } else {
+            // select two parents and merge
+            float ar = random(0.0, fitness_sum);
+            float br = random(0.0, fitness_sum);
+
+            Individual a;
+            Individual b;
+
+            for (int i = individuals.size() - 1; i >= 0; i--) {
+                fitness_sum -= individuals[i].fitness();
+                if (ar > fitness_sum) {
+                    a = Individual(individuals[i]);
+                    break;
+                }
+            }
+            for (int i = individuals.size() - 1; i >= 0; i--) {
+                fitness_sum -= individuals[i].fitness();
+                if (br > fitness_sum) {
+                    b = Individual(individuals[i]);
+                    break;
+                }
+            }
+
+            auto sa = a.get_segments(1);
+            auto sb = a.get_segments(1);
+            vector<vector<int>> segments;
+            while (sa.size() > 0 || sb.size() > 0) {
+                if (sa.size() > 0) {
+                    segments.push_back(sa[0]);
+                    sa.erase(sa.begin() + 0);
+                }
+                if (sb.size() > 0) {
+                    segments.push_back(sb[0]);
+                    sb.erase(sb.begin() + 0);
+                }
+            }
+            auto ids = segments_to_ids(segments);
+            vector<int> used_ids;
+            for (int i = 0; i < ids.size(); ++i) {
+                if (!used[ids[i]]) {
+                    used_ids.push_back(ids[i]);
+                    used[ids[i]] = true;
+                }
+            }
+
+//            cout << ids[max_element(ids.begin(), ids.end()) - ids.begin()] << endl;
+//            cout << used_ids.size() << endl;
+
+            words_ids_used = used_ids;
+            words = a.words;
+
+            set_string();
+            valid_string();
+
+            return;
+
         }
-        mutate();
     };
 
     void mutate() {
         float r = random(0.0, 1.0);
 
-        // swap segments
-        auto segments = get_segments(1);
-        while (random(0.0, 1.0) < 0.3) {
-            int i1 = rand() % segments.size();
-            int i2 = rand() % segments.size();
-            swap(segments[i1], segments[i2]);
+        // completely new individual
+        if (r < 0.05) {
+            if (random(0.0, 1.0) < 0.01) {
+                set(Individual(words, rand() % words->words.size()));
+            }
         }
-
-        set_word_ids(segments);
 
         // swap words
-        while (random(0.0, 1.0) < 0.1) {
-            int i1 = rand() % words_ids_used.size();
-            int i2 = rand() % words_ids_used.size();
-            swap(words_ids_used[i1], words_ids_used[i2]);
-            float r_swap = random(0.0, 1.0);
+        if (r < 0.10) {
+            while (random(0.0, 1.0) < 0.1) {
+                int i1 = rand() % words_ids_used.size();
+                int i2 = rand() % words_ids_used.size();
+                swap(words_ids_used[i1], words_ids_used[i2]);
+                float r_swap = random(0.0, 1.0);
+            }
         }
 
-        // shuffle segments
-        if (random(0.0, 1.0) < 0.05) {
+        // swap segments
+        if (r < 0.50) {
             auto segments = get_segments(1);
-            random_shuffle(segments.begin(), segments.end());
+            while (random(0.0, 1.0) < 0.3) {
+                int i1 = rand() % segments.size();
+                int i2 = rand() % segments.size();
+                swap(segments[i1], segments[i2]);
+            }
             set_word_ids(segments);
         }
 
-        // completely new individual
-        if (random(0.0, 1.0) < 0.01) {
-            set(Individual(words, rand() % words->words.size()));
+        // shuffle segments
+        if (r < 0.70) {
+            if (random(0.0, 1.0) < 0.05) {
+                auto segments = get_segments(1);
+                random_shuffle(segments.begin(), segments.end());
+                set_word_ids(segments);
+            }
         }
 
         set_string();
@@ -163,12 +241,21 @@ public:
         return s;
     }
 
-    // check if string contains all required words
     bool valid_string() {
-        // todo modify this function for the case of positive errors present. fixed, but needs extedning
+        // check if every word used is in string
         for (int id: words_ids_used) {
             if (s.find(words->words[id]) == std::string::npos) {
-                cout << "Invalid string! " << s << " " << words->words[id] << endl;
+                cout << "Invalid string! " << s << " " << words->words[id] << "not present" << endl;
+                return false;
+            }
+        }
+
+        // check if every used id appears only once
+        vector<int> used_ids_cnt(words->words.size(), 0);
+        for (int id: words_ids_used) {
+            used_ids_cnt[id]++;
+            if (used_ids_cnt[id] > 1) {
+                cout << "Invalid string! " << s << " " << words->words[id] << "appeared twice." << endl;
                 return false;
             }
         }
@@ -188,13 +275,47 @@ public:
         return Individual();
     }
 
+    void shorten() {
+        auto segments = get_segments(1);
+
+        string s = set_string();
+        int words_removed_a = 0;
+        int words_removed_b = 0;
+
+        while (s.size() > words->n) {
+            vector<int> *shortest_segment = &segments[0];
+            for (auto& segment: segments) {
+                if (shortest_segment->size() == 0 || ( segment.size() != 0 && segment.size() < shortest_segment->size() )) {
+                    shortest_segment = &segment;
+                }
+            }
+            shortest_segment->erase(shortest_segment->end() - 1);
+            words_removed_a++;
+            s = get_string(words->words, segments_to_ids(segments), words->l);
+        }
+
+        s = set_string();
+        auto words_ids = words_ids_used;
+        while (s.size() > words->n) {
+            words_ids.erase(words_ids.end() - 1);
+            s = get_string(words->words, words_ids, words->l);
+            words_removed_b++;
+        }
+//        cout << words_removed_a << " " << words_removed_b << endl;
+
+        // check which shortening method is better and use it
+        if (words_removed_a < words_removed_b) {
+            set_word_ids(segments);
+        } else {
+            words_ids_used = words_ids;
+            set_string();
+        }
+    }
+
     // SETTERS
 
     void set_word_ids(vector<vector<int>> segments) {
-        words_ids_used.clear();
-        for (vector<int> segment : segments) {
-            words_ids_used.insert(words_ids_used.end(), segment.begin(), segment.end());
-        }
+        words_ids_used = segments_to_ids(segments);
         set_string();
     }
 

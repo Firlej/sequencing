@@ -48,7 +48,7 @@ public:
             memset(d[i], false, words.size()*sizeof(int));
         }
 
-        S = words.size() + cnt_negative - cnt_positive;
+        S = words.size() - cnt_positive;
 
 //        cout << filename << " " << n << " " << l << " " << cnt_positive << " " << cnt_negative << " " << S << endl;
 
@@ -68,6 +68,7 @@ public:
         words.clear();
         delete(d);
     }
+
 
 
 };

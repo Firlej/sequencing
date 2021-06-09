@@ -124,64 +124,42 @@ int main() {
 
     int perfect_instance_cnt = 0; // 9 -> 19
 
+    vector<GA> gas;
+
+    cout << "Plik, N, N-znalezione, N-znalezione-skrocone, S, S-uzyte, odchylenie, OPTIMUM, czas[s]" << endl;
 
     for (Words &words : words) {
         clock_t begin = clock();
+        clock_t end = clock();
+        double elapsed_secs = 0.0;
 
-//        cout << words.filename << endl;
         words.init();
         GA ga(&words);
 
-//        FOR(i, 100) {
-//
-//            ga.next_population();
-//            Individual curr_best_individual = ga.population.get_best_individual();
-////            ga.population.get_best_individual().print_summary();
-//
-//            if (curr_best_individual.score() < best_individual.score()) {
-//                best_individual = curr_best_individual;
-//                best_individual.print_summary();
-//            }
-//
-//            if (best_individual.score() <= words.n) {
-//                break;
-//            }
-//        }
+        while (ga.time_from_last_improvemmnt() < 15 || elapsed_secs < 60) {
 
-//        printf("RESULT: %s\n", best_individual.s.c_str());
-//        cout << "best_individual: " << best_individual.s << endl;
+            if (ga.best_individual.score() <= words.n) {
+                perfect_instance_cnt++;
+                break;
+            }
 
-//        best_individual.print_used_words();
-//        best_individual.print_segments();
-//        best_individual.print_negative_errors();
-//        best_individual.print_positive_errors();
-//        best_individual.print_summary();
+            ga.next_population();
 
-//        cout << "[SHUFFLES]" << endl;
-//        vector<vector<int>> segments = best_individual.get_segments();
-//        int best_score = best_individual.score();
-//        for (int i = 0; i < 100000000; ++i) {
-//            random_shuffle(segments.begin(), segments.end());
-////            print_segments(best_individual.words->words, segments, best_individual.words->l);
-//            best_individual.set_word_ids(segments);
-//            if (best_individual.score() < best_score) {
-//                best_individual.print_summary();
-//                best_score = best_individual.score();
-//                if (best_score <= best_individual.words->n) {
-//                    best_individual.print_summary();
-//                    break;
-//                }
-//            }
-//        }
-
-        // print summary of results for instance
-        ga.print_summary();
-        if (ga.best_individual.score() <= words.n) {
-//            cout << "Found valid individual!" << endl;
-            perfect_instance_cnt++;
+            elapsed_secs = double(clock() - begin) / CLOCKS_PER_SEC;
         }
 
+        // print summary of results for instance
+//        ga.print_summary();
+
+        cout << ga.output();
+
+//        gas.push_back(ga);
     }
+
+//    cout << "Plik, N, N-znalezione, N-znalezione-skrócone, S, S-użyte, odchylenie, OPTIMUM, " << endl;
+//    for (GA &ga: gas) {
+//        cout << ga.output();
+//    }
 
     cout << "Perfect instance count: " << perfect_instance_cnt << endl;
 

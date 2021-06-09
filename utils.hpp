@@ -45,6 +45,14 @@ void print_segments(vector<string> words, vector<vector<int>> segments, int l) {
     }
 }
 
+vector<int> segments_to_ids(vector<vector<int>> segments) {
+    vector<int> words_ids;
+    for (vector<int> segment : segments) {
+        words_ids.insert(words_ids.end(), segment.begin(), segment.end());
+    }
+    return words_ids;
+}
+
 float random(float LO = 0.0, float HI = 1.0) {
     return LO + static_cast <float> (rand()) /( static_cast <float> (RAND_MAX/(HI-LO)));
 }
