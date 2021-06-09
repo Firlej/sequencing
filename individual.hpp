@@ -34,33 +34,70 @@ public:
         used[starting_index] = true;
 
         while (words_ids_used.size() < words->words.size() - words->cnt_positive) {
-            int best_i = -1;
+            int best_id = -1;
             int best_d = words->l + 1;
+            vector<int> best_ids;
             FOR (i, words->words.size()) {
                 if (!used[i]) {
-                    // todo used to be searching in string if other words were created
-                    if (false && find(words_ids_used.begin(), words_ids_used.end(), i) != words_ids_used.end()) {
-                        used[i] = true;
-                        continue;
-                    } else {
-                        int temp_d = dist(words->words[words_ids_used[words_ids_used.size() - 1]], words->words[i],
-                                          words->l);
+                    int temp_d = words->d[last_id()][i];
+                    if (temp_d < best_d) {
+                        best_ids.clear();
+                        best_ids.push_back(i);
+                        best_d = temp_d;
+                        best_id = i;
+                    } else if (temp_d == best_d) {
+                        best_ids.push_back(i);
+                    }
+                }
+            }
+
+            // if more than one best_id check wchich one has better next word. very useful for positive error instances
+            if (best_ids.size() > 1) {
+                best_id = -1;
+                best_d = words->l + 1;
+                for (int i = 0; i < best_ids.size(); i++) {
+                    if (next_best_id(i) != -1) {
+                        int temp_d = words->d[best_ids[i]][next_best_id(best_ids[i])];
                         if (temp_d < best_d) {
                             best_d = temp_d;
-                            best_i = i;
+                            best_id = best_ids[i];
                         }
                     }
                 }
             }
-            words_ids_used.push_back(best_i);
+            words_ids_used.push_back(best_id);
 //            cout << words->words[best_i] << " ";
-            used[best_i] = true;
+            used[best_id] = true;
+            // set_string();
         }
 //        cout << endl;
 
         set_string();
 //        cout << s << endl;
     };
+
+    int last_id() {
+        return words_ids_used[words_ids_used.size() - 1];
+    }
+
+    string last_word() {
+        return words->words[last_id()];
+    }
+
+    int next_best_id(int id) {
+        int best_i = -1;
+        int best_d = words->l + 1;
+        FOR (i, words->words.size()) {
+            if (!used[i] && i != id) {
+                int temp_d = words->d[id][i];
+                if (temp_d < best_d) {
+                    best_d = temp_d;
+                    best_i = i;
+                }
+            }
+        }
+        return best_i;
+    }
 
     // individual from individuals from prev_pop
     Individual(vector<Individual> individuals, float fitness_sum) {
@@ -273,5 +310,6 @@ void Individual::print_summary() {
          << " | n: " << words->n
          << " | LENGTH: " << s.size()
          << " | SCORE: " << score()
-         << " | N_ERRORS: " << get_negative_errors().size() << endl;
+         << " | N_ERRORS: " << get_negative_errors().size()
+         << " | P_ERRORS: " << get_positive_errors().size() << endl;
 }

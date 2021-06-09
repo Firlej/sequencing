@@ -28,8 +28,8 @@ public:
     };
 
     // new population based on previous generation
-    Population(Population& population) {
-//        cout << "elo" << endl;
+    Population(Population& population, Individual best_individual) {
+
         words = population.words;
 
         individuals.clear();
@@ -38,6 +38,10 @@ public:
             Individual individual = Individual(population.individuals, fitness_sum);
             individuals.push_back(individual);
         }
+
+        // add best best individual overall to each next population increasing its size each generation by 1
+        individuals.push_back(Individual(best_individual));
+
         size = individuals.size();
         set_fitness_sum();
     };

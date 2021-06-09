@@ -30,10 +30,12 @@ public:
         l = _l;
         cnt_positive = _cnt_positive;
         cnt_negative = _cnt_negative;
+    }
 
+    void init() {
         fstream fs;
         string s;
-        fs.open(filename.c_str());
+        fs.open(("../files/" + filename).c_str());
         words.clear();
         while (fs >> s) {
             words.push_back(s);
@@ -60,6 +62,11 @@ public:
 //                cout << words[i] << " " <<  words[j] << " " << d[i][j] << endl;
             }
         }
+    }
+
+    void clear() {
+        words.clear();
+        delete(d);
     }
 
 
